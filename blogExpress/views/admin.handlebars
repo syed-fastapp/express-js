@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <style>
+        table{
+            margin: 50px auto;
+        }
+        table, th, td {
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+        th,td {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <main style="width: 50%; margin: 50px auto; text-align: center;">
+        <label>Title: </label>
+        <input type="text" id="name-input"><br><br>
+        <label >Body: </label>
+        <input type="text" id="body-input"><br><br>
+        <button id="add-btn">Add</button>
+
+        
+        <div style="margin-top: 10px;">
+            <input type="text" placeholder="search by title" id="search-input">
+            <button id="search-btn">Search</button>
+        </div>
+
+    <table id="table">
+        <thead>
+            <th>ID</th>
+            <th>TITLE</th>
+            <th>BODY</th>
+            <th>DATE ADDED</th>
+            <th>DELETE</th>
+            <th>EDIT</th>
+        </thead>
+        <tbody>
+            {{#each blogs}}
+            <tr>
+                <td>{{this.id}}</td>
+                <td>{{this.title}}</td>
+                <td>{{this.body}}</td>
+                <td>{{this.added_on}}</td>
+                <td><button id="del-{{this.id}}">delete</button></td>
+                <td><button class="edit-row-btn" id='{{this.id}}'>edit</button></td>
+            </tr>
+            {{/each}}
+
+        </tbody>
+    </table>
+    <section hidden id="update-row">
+        <label >Id:</label>
+        <input id="update-id" readonly><br>
+        <label>Title:</label>
+        <input type="text" id="update-name-input"><br>
+        <label>Body: </label>
+        <input type="text" id="update-body"><br>
+        <button id="update-row-btn">Update</button>
+    </section>
+    </main>
+</body>
+<script>
+    
+    let add = document.getElementById("add-btn")
+    add.onclick = ()=>{
+        
+        const titleInput = document.querySelector("#name-input")
+        const bodyInput = document.querySelector("#body-input")
+        const title = titleInput.value
+        const body = bodyInput.value
+        titleInput.value =""
+        bodyInput.value = ""
+        console.log("hello", titleInput.value)
+        fetch("http://localhost:3000/add", {
+            headers: {
+                'Content-type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify({title: title, body: body})
+        })
+        .then(responce => {
+            responce.json()
+            location.reload()
+        })
+        // 
+        // .then(location.reload();)
+        
+    }
+
+    fetch('http://localhost:3000/blogs')
+    .then(response => response.json())
+    .then(data => {
+        data['data'].forEach((index, value)=>{
+            document.getElementById(""+index.id).onclick = ()=>{
+                const updateSection = document.querySelector('#update-row');
+                document.getElementById("update-name-input").value = index.title
+                document.getElementById("update-body").value = index.body
+                document.getElementById("update-id").value = index.id
+                updateSection.hidden = false;
+            }
+
+            document.getElementById('del-'+index.id).onclick =()=> deleteRowById(index.id)
+            
+        });
+    });
+    
+    function deleteRowById(id) {
+        console.log(id)
+        fetch('http://localhost:3000/delete/' + id, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            response.json()
+            location.reload();
+        })
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+
+    const updateBtn = document.getElementById('update-row-btn')
+    updateBtn.onclick = function() {
+        const updateNameInput = document.querySelector('#update-name-input');
+        const id = document.getElementById('update-id').value
+        const body = document.getElementById('update-body').value
+
+        fetch('http://localhost:3000/update', {
+            method: 'PATCH',
+            headers: {
+                'Content-type' : 'application/json'
+            },
+            body: JSON.stringify({
+                id: id,
+                title: updateNameInput.value,
+                body: body,
+            })
+        })
+        .then(response => {
+            response.json()
+            location.reload();
+        })
+        .then(data => {
+            if (data.success) {
+                
+            }
+        })
+// sudo /opt/lampp/manager-linux-x64.run
+
+    }
+</script>
+</html>
